@@ -46,7 +46,7 @@ Your diary and knowledge graph stay on your computer. Speech and chat models run
 
 > “Jarvis, help me think through my day.”
 
-Right-click the face or use the tray menu to open **Chat**. Text replies are silent.
+Right-click the face or use the tray menu to open **Chat**. Typed replies are spoken through the configured voice when speech output is enabled.
 
 <details>
 <summary><strong>Hardware and model choices</strong></summary>
@@ -73,7 +73,7 @@ For an experimental 27B alternative, see the [Bonsai 2 local setup guide](docs/B
 - **Get things done.** Built-in tools cover web search, weather, time, screenshot OCR, file access, optional search across your text and Markdown folders, nutrition tracking and optional location awareness.
 - **Connect your own tools.** MCP servers add browser automation, smart-home controls and other integrations.
 - **Dictate into other apps.** Hold a hotkey, speak, then release to paste locally transcribed text. See the [platform limitations](#known-limitations) first.
-- **Type when you need to.** The companion chat shares your voice conversation and memory. Text replies are silent, and you can rewind a sent message to regenerate from that point.
+- **Type when you need to.** The companion chat shares your voice conversation and memory. Replies are spoken through the configured voice and you can rewind a sent message to regenerate from that point.
 - **Optional background work.** Enable Background Tasks in Settings to queue work locally, follow results and cancel requests. Off by default.
 
 ### Bring Jarvis into the discussion
@@ -114,9 +114,9 @@ Choose models, tune speech recognition, configure tools and enable Low Power Mod
   <img src="docs/img/settings-window.png" alt="Jarvis Settings with a category sidebar and speech recognition controls" width="900">
 </p>
 
-### A quiet companion to voice
+### A companion to voice
 
-Open Chat for silent replies in the same conversation. **Pause Voice Listening** stops room transcription during meetings while chat and dictation stay available.
+Open Chat for spoken replies in the same conversation. **Pause Voice Listening** stops room transcription during meetings while chat and dictation stay available.
 
 <p align="center">
   <img src="docs/img/chat-window.png" alt="Jarvis companion chat in its rounded graphite phone-style window, showing illustrative messages and an amber composer" width="480">

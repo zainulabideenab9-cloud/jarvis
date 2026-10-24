@@ -2,8 +2,8 @@
 
 These verify the contract in ``src/desktop_app/chat_window.spec.md``:
 
-- ``submit_text_query`` runs the reply engine with ``tts=None`` and the shared
-  global dialogue memory (one conversation for voice + text).
+- ``submit_text_query`` runs the reply engine with the configured speech engine
+  and shared global dialogue memory (one conversation for voice + text).
 - It is fire-and-forget; results arrive via callbacks, not the return value.
 - It fires ``on_start`` (with the redacted query) and ``on_complete`` (with the
   reply or ``None`` on failure).
@@ -20,6 +20,7 @@ import json
 import sys
 import threading
 import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -40,13 +41,14 @@ _REDACTABLE_QUERIES = [
 def _reset_daemon_globals():
     """Restore daemon module globals between tests."""
     daemon._global_dialogue_memory = None
+    daemon._global_tts_engine = None
     daemon._global_cfg = None
     daemon._global_db = None
     daemon._global_stop_requested = False
     daemon._chat_query_lock = threading.Lock()
 
 
-def _install_dialogue_memory(cfg=None, db=None):
+def _install_dialogue_memory(cfg=None, db=None, tts=None):
     """Install a DialogueMemory plus optional cfg/db into the daemon globals.
 
     The contract tests pass mock cfg/db so ``submit_text_query`` can hand
@@ -54,6 +56,7 @@ def _install_dialogue_memory(cfg=None, db=None):
     """
     dm = DialogueMemory(inactivity_timeout=300, max_interactions=20)
     daemon._global_dialogue_memory = dm
+    daemon._global_tts_engine = tts
     daemon._global_cfg = cfg
     daemon._global_db = db
     return dm
@@ -99,7 +102,7 @@ def _wait_for_ipc_complete(capsys, timeout=5.0):
 
 @pytest.mark.unit
 class TestSubmitTextQueryContract:
-    """Core contract: shares memory, no TTS, callbacks fire."""
+    """Core contract: shares memory, uses configured speech, callbacks fire."""
 
     def setup_method(self, _method):
         _reset_daemon_globals()
@@ -107,10 +110,10 @@ class TestSubmitTextQueryContract:
     def teardown_method(self, _method):
         _reset_daemon_globals()
 
-    def test_runs_engine_with_tts_none_and_shared_memory(self, monkeypatch):
-        """The worker must call run_reply_engine with tts=None and the global
-        DialogueMemory, so text and voice share one conversation."""
-        dm = _install_dialogue_memory(cfg=object(), db=object())
+    def test_runs_engine_with_configured_tts_and_shared_memory(self, monkeypatch):
+        """Typed replies receive the daemon's speech engine and shared memory."""
+        tts = SimpleNamespace(enabled=True)
+        dm = _install_dialogue_memory(cfg=object(), db=object(), tts=tts)
         captured = {}
 
         def fake_engine(db, cfg, tts, text, dialogue_memory, language=None, **kwargs):
@@ -131,7 +134,7 @@ class TestSubmitTextQueryContract:
         )
         _wait_for_complete(events)
 
-        assert captured["tts"] is None
+        assert captured["tts"] is tts
         assert captured["dialogue_memory"] is dm
         assert captured["language"] is None
         assert captured["text"] == "hi there"

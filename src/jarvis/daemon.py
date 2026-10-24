@@ -401,10 +401,11 @@ def submit_text_query(
 ) -> None:
     """Submit a text query to the reply engine (fire-and-forget).
 
-    Runs ``run_reply_engine`` on a worker thread with ``tts=None`` and the
-    shared global dialogue memory, so text and voice are one conversation.
-    Results are delivered via the per-call callbacks (bundled mode) and/or
-    ``__CHAT__:`` IPC events (subprocess mode). See ``chat_window.spec.md``.
+    Runs ``run_reply_engine`` on a worker thread with the shared speech
+    engine and dialogue memory, so typed replies are spoken in the same
+    conversation as voice replies. Results are delivered via callbacks
+    (bundled mode) and/or ``__CHAT__:`` IPC events (subprocess mode).
+    See ``chat_window.spec.md``.
 
     A second submission while one is running is rejected with a ``busy``
     event rather than queued. A running query can be cancelled with
@@ -468,10 +469,19 @@ def submit_text_query(
             print(f'⌨️ Typed: "{display_query}"', flush=True)
             _notify_chat("start", display_query, callbacks=callbacks, use_ipc=use_ipc)
             from .reply.engine import run_reply_engine
+            speech_enabled = (
+                _global_tts_engine is not None and _global_tts_engine.enabled
+            )
+            debug_log(
+                "typed chat reply speech enabled"
+                if speech_enabled
+                else "typed chat reply speech disabled or unavailable",
+                "chat",
+            )
             reply = run_reply_engine(
                 db=db,
                 cfg=cfg,
-                tts=None,
+                tts=_global_tts_engine,
                 text=text,
                 dialogue_memory=dm,
                 language=None,

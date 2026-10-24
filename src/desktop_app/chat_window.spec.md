@@ -25,6 +25,8 @@ availability and reports the affected dependency; typed replies do not require
 microphone capture, array processing, VAD or Whisper.
 Pausing voice listening keeps text submission and its daemon lifecycle state
 available. User and dictation capture pauses do not stop or restart text chat.
+Both microphone and typed replies use the daemon's configured local speech
+engine when speech output is enabled.
 
 ### `submit_text_query(text: str) -> None` (in `jarvis.daemon`)
 
@@ -34,8 +36,8 @@ available. User and dictation capture pauses do not stop or restart text chat.
   value. This mirrors how `_check_and_update_diary` is invoked from a worker
   QThread in the existing desktop app.
 - The worker thread runs
-  `run_reply_engine(db, cfg, tts=None, text, _global_dialogue_memory, language=None, quiet=True)`.
-- `tts=None` — text chat never speaks. Audio output stays a voice-only concern.
+  `run_reply_engine(db=db, cfg=cfg, tts=_global_tts_engine, text=text, dialogue_memory=_global_dialogue_memory, language=None, quiet=True)`.
+- Typed replies are spoken through the shared speech engine when it is available and enabled. Speech-disabled or unavailable states are recorded in debug logs.
 - `language=None` — text input has no Whisper-detected language; tools fall
   back to their own defaults, same as a voice query with no language hint.
 - Redaction still applies (`run_reply_engine` calls `redact(text)` before
@@ -313,7 +315,7 @@ the app.
   through the same `submit_text_query` entry point but are not wired.
 - **No text-input wake word.** Text is always "directed": there is no intent
   judge, no echo detection, no wake word. The user typing is the intent.
-- **No TTS.** Text chat is silent. If the user wants spoken replies, they use
-  the voice path.
+- **Speech follows the shared setting.** Typed replies use the configured
+  speech engine when it is enabled and available.
 - **No chat sessions.** The window shows one continuous conversation with the
   daemon's shared memory; there is no new-session / session-switching UI.
